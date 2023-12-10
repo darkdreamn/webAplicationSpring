@@ -4,8 +4,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
+import org.json.simple.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -33,16 +35,21 @@ public class UserController {
     }
 
     @GetMapping("/estatistica")
-    public List<Transaction> listTransactions() {
+    public ResponseEntity<JSONObject> listTransactions() {
         LocalDateTime agora = LocalDateTime.now();
         // TODO: atualizar de hora para minuto depois
         LocalDateTime limitePassado = agora.minusHours(1);
-
         DateTimeFormatter formatarStringParaDate = DateTimeFormatter.ISO_DATE_TIME;
+
+        HashMap<String, Object> result = new HashMap<String, Object>();
 
         if (transactions.isEmpty()) {
             System.out.println("Não há transações");
-            return transactions;
+            result.put("A quantidade das transações feitas", 0);
+            result.put("O valor total das transações", 0);
+            result.put("A média das transações", 0);
+            result.put("A menor transação", 0);
+            result.put("A maior transação", 0);
         } else {
             transactions.sort(Comparator.comparing(Transaction::getDataHora).reversed());
             int quantidadeTransacoes = 0;
@@ -56,8 +63,6 @@ public class UserController {
             do {
                 stringEmDateTime = LocalDateTime.parse(transactions.get(i).getDataHora(), formatarStringParaDate);
                 if (stringEmDateTime.isAfter(limitePassado)) {
-                    // System.out.println("stringEmDateTime: " + stringEmDateTime);
-                    // System.out.println("limitepassado: " + limitePassado);
                     double valorAtual = transactions.get(i).getValor();
 
                     if (menorTransacao > valorAtual)
@@ -75,12 +80,15 @@ public class UserController {
             } while (transactions.size() > i);
 
             media = valorTotal / quantidadeTransacoes;
-            System.out.println("A quantidade das transações feitas: " + quantidadeTransacoes);
-            System.out.println("O valor total das transações: " + valorTotal);
-            System.out.println("A média das transações: " + media);
-            System.out.println("A menor transação: " + menorTransacao);
-            System.out.println("A maior transação: " + maiorTransacao);
+
+            result.put("A quantidade das transações feitas", quantidadeTransacoes);
+            result.put("O valor total das transações", valorTotal);
+            result.put("A média das transações", media);
+            result.put("A menor transação", menorTransacao);
+            result.put("A maior transação", maiorTransacao);
         }
-        return transactions;
+        JSONObject resultJson = new JSONObject(result);
+
+        return ResponseEntity.status(HttpStatus.OK).body(resultJson);
     }
 }
