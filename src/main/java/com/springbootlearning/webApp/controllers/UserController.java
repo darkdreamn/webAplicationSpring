@@ -45,24 +45,42 @@ public class UserController {
             return transactions;
         } else {
             transactions.sort(Comparator.comparing(Transaction::getDataHora).reversed());
+            int quantidadeTransacoes = 0;
             int i = 0;
+            double menorTransacao = Integer.MAX_VALUE;
+            double maiorTransacao = Integer.MIN_VALUE;
+            double valorTotal = 0;
             LocalDateTime stringEmDateTime;
+            double media;
 
             do {
                 stringEmDateTime = LocalDateTime.parse(transactions.get(i).getDataHora(), formatarStringParaDate);
                 if (stringEmDateTime.isAfter(limitePassado)) {
-                    System.out.println("stringEmDateTime: " + stringEmDateTime);
-                    System.out.println("limitepassado: " + limitePassado);
+                    // System.out.println("stringEmDateTime: " + stringEmDateTime);
+                    // System.out.println("limitepassado: " + limitePassado);
+                    double valorAtual = transactions.get(i).getValor();
+
+                    if (menorTransacao > valorAtual)
+                        menorTransacao = valorAtual;
+                    if (maiorTransacao < valorAtual)
+                        maiorTransacao = valorAtual;
+
+                    valorTotal += valorAtual;
+                    quantidadeTransacoes++;
                     i++;
                 } else {
                     System.out.println("Fora do tempo");
                     break;
                 }
-
             } while (transactions.size() > i);
 
+            media = valorTotal / quantidadeTransacoes;
+            System.out.println("A quantidade das transações feitas: " + quantidadeTransacoes);
+            System.out.println("O valor total das transações: " + valorTotal);
+            System.out.println("A média das transações: " + media);
+            System.out.println("A menor transação: " + menorTransacao);
+            System.out.println("A maior transação: " + maiorTransacao);
         }
-
         return transactions;
     }
 }
