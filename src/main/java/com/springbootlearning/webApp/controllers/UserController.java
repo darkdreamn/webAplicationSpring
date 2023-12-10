@@ -1,6 +1,9 @@
 package com.springbootlearning.webApp.controllers;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -15,7 +18,7 @@ import com.springbootlearning.webApp.model.Transaction;
 
 @RestController
 public class UserController {
-    private List<Transaction> transactions = new ArrayList<>();
+    private List<Transaction> transactions = new ArrayList<Transaction>();
 
     @PostMapping("/transacao")
     public ResponseEntity<String> transaction(@RequestBody Transaction transaction) {
@@ -31,6 +34,35 @@ public class UserController {
 
     @GetMapping("/estatistica")
     public List<Transaction> listTransactions() {
+        LocalDateTime agora = LocalDateTime.now();
+        // TODO: atualizar de hora para minuto depois
+        LocalDateTime limitePassado = agora.minusHours(1);
+
+        DateTimeFormatter formatarStringParaDate = DateTimeFormatter.ISO_DATE_TIME;
+
+        if (transactions.isEmpty()) {
+            System.out.println("Não há transações");
+            return transactions;
+        } else {
+            transactions.sort(Comparator.comparing(Transaction::getDataHora).reversed());
+            int i = 0;
+            LocalDateTime stringEmDateTime;
+
+            do {
+                stringEmDateTime = LocalDateTime.parse(transactions.get(i).getDataHora(), formatarStringParaDate);
+                if (stringEmDateTime.isAfter(limitePassado)) {
+                    System.out.println("stringEmDateTime: " + stringEmDateTime);
+                    System.out.println("limitepassado: " + limitePassado);
+                    i++;
+                } else {
+                    System.out.println("Fora do tempo");
+                    break;
+                }
+
+            } while (transactions.size() > i);
+
+        }
+
         return transactions;
     }
 }
