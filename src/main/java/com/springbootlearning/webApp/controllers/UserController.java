@@ -18,12 +18,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.springbootlearning.webApp.model.Transaction;
 
+import jakarta.validation.Valid;
+
 @RestController
 public class UserController {
     private List<Transaction> transactions = new ArrayList<Transaction>();
 
     @PostMapping("/transacao")
-    public ResponseEntity<String> transaction(@RequestBody Transaction transaction) {
+    public ResponseEntity<String> transaction(@RequestBody @Valid Transaction transaction) {
+
+        LocalDateTime agora = LocalDateTime.now();
+        DateTimeFormatter formatarStringParaDate = DateTimeFormatter.ISO_DATE_TIME;
+        LocalDateTime stringEmDateTime = LocalDateTime.parse(transaction.getDataHora(), formatarStringParaDate);
+
+        if (transaction.getValor() < 0 || agora.isBefore(stringEmDateTime)) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("Transação não aceita");
+        }
         transactions.add(transaction);
         return ResponseEntity.status(HttpStatus.CREATED).body("A transação foi aceita");
     }
@@ -37,7 +47,7 @@ public class UserController {
     @GetMapping("/estatistica")
     public ResponseEntity<JSONObject> listTransactions() {
         LocalDateTime agora = LocalDateTime.now();
-        // TODO: atualizar de hora para minuto depois
+
         LocalDateTime limitePassado = agora.minusHours(1);
         DateTimeFormatter formatarStringParaDate = DateTimeFormatter.ISO_DATE_TIME;
 
